@@ -159,6 +159,14 @@ async function runPostcard() {
     }),
   }).then((res) => res.json());
   console.log(buffer.length, sendCard);
+  await db.collection("images").updateMany(
+    {
+      pending: true,
+    },
+    {
+      $set: {pending: false},
+    }
+  );
   resetMonth();
   tickTimer();
 }
