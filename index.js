@@ -4,18 +4,21 @@ const secrets = require("./secrets.json");
 const generateCard = require("./imageGen");
 const fetch = require("node-fetch");
 const FormData = require("form-data");
+const fs = require("fs").promises;
 
 const mongoClient = new MongoClient(
   secrets.mongoUri || "mongodb://localhost:27017"
 );
 // I don't care that this is a race condition
 let db;
-mongoClient.connect((err) => {
-  if (err) {
-    throw err;
-  }
+const ensureDB = new Promise((res, rej) => {
+  mongoClient.connect((err) => {
+    if (err) {
+      throw err;
+    }
 
-  db = mongoClient.db("daniel-demandson");
+    db = mongoClient.db("daniel-demandson");
+  });
 });
 
 function request(url, options) {
@@ -79,7 +82,7 @@ function resetMonth() {
   // Jump to next month:
   monthScheduler.setUTCMonth(monthScheduler.getUTCMonth() + 1);
   // Set to midnight!
-  monthScheduler.setUTCDate(0);
+  monthScheduler.setUTCDate(1);
   monthScheduler.setUTCHours(0);
   monthScheduler.setUTCMinutes(0);
   monthScheduler.setUTCSeconds(0);
@@ -96,6 +99,7 @@ function tickTimer() {
   }
 }
 async function runPostcard() {
+  await ensureDB;
   const images = await db.collection("images").find({
     pending: true,
   });
