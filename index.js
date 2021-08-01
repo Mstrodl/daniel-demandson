@@ -74,6 +74,8 @@ app.event("app_mention", async (ctx) => {
     text: `Hello! Your demands should be sent in the next collection at ${monthScheduler} (${
       (Date.now() - monthScheduler) / 1000 / 60 / 60 / 24
     } days)`,
+    thread_ts: ctx.payload.thread_ts || ctx.payload.ts,
+    channel: ctx.payload.channel,
   });
 });
 
