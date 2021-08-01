@@ -5,19 +5,22 @@ const generateCard = require("./imageGen");
 const fetch = require("node-fetch");
 const FormData = require("form-data");
 const fs = require("fs").promises;
+const path = require("path");
 
 const mongoClient = new MongoClient(
   secrets.mongoUri || "mongodb://localhost:27017"
 );
 // I don't care that this is a race condition
 let db;
-const ensureDB = new Promise((res, rej) => {
+const ensureDB = new Promise((resolve, reject) => {
   mongoClient.connect((err) => {
     if (err) {
+      reject(err);
       throw err;
     }
 
     db = mongoClient.db("daniel-demandson");
+    resolve(db);
   });
 });
 
@@ -82,7 +85,7 @@ app.event("app_mention", async (ctx) => {
 const monthScheduler = new Date();
 function resetMonth() {
   // Jump to next month:
-  monthScheduler.setUTCMonth(monthScheduler.getUTCMonth() + 1);
+  monthScheduler.setUTCMonth(new Date().getUTCMonth() + 1);
   // Set to midnight!
   monthScheduler.setUTCDate(1);
   monthScheduler.setUTCHours(0);
@@ -167,7 +170,7 @@ async function runPostcard() {
       file_urls: urls,
     }),
   }).then((res) => res.json());
-  console.log(buffer.length, sendCard);
+  console.log(sendCard, JSON.stringify(sendCard, null, 2));
   await db.collection("images").updateMany(
     {
       pending: true,
@@ -179,5 +182,8 @@ async function runPostcard() {
   resetMonth();
   tickTimer();
 }
-
-tickTimer();
+if (process.env.RUN_POST) {
+  runPostcard();
+} else {
+  tickTimer();
+}
