@@ -94,6 +94,9 @@ resetMonth();
 
 function tickTimer() {
   const waitTime = monthScheduler.getTime() - Date.now();
+  console.log(
+    `Ticked timer. We have ${waitTime / 1000 / 60 / 60 / 24} days left`
+  );
   if (waitTime > 2 ** 30) {
     setTimeout(tickTimer, 2 ** 30);
   } else {
