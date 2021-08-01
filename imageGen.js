@@ -8,6 +8,22 @@ const TARGET_WIDTH = 8.26667 * SCALE;
 const TARGET_HEIGHT = 5.82667 * SCALE;
 
 function drawDecals(image, metadata, font) {
+  console.log("Drawing decals", metadata);
+  const width = Jimp.measureText(font, metadata.name);
+  const height = Jimp.measureTextHeight(font, metadata.name);
+  // Black out corner
+  const padLeft = SCALE * 0.15;
+  image.scan(
+    image.bitmap.width - padLeft - width,
+    SCALE * 0.1,
+    width + padLeft,
+    height + padLeft / 10,
+    (x, y, idx) => {
+      image.bitmap.data[idx] = 0;
+      image.bitmap.data[idx + 1] = 0;
+      image.bitmap.data[idx + 2] = 0;
+    }
+  );
   image.print(
     font,
     SCALE * 0.1,
@@ -24,7 +40,7 @@ function drawDecals(image, metadata, font) {
 }
 
 module.exports = async function dump(sources) {
-  const font = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
+  const font = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
   const output = await new Promise(
     (resolve, reject) =>
       new Jimp(TARGET_WIDTH, TARGET_HEIGHT, (err, output) =>
@@ -67,7 +83,7 @@ module.exports = async function dump(sources) {
         (image.bitmap.width / image.bitmap.height) * idealHeight + collector,
       0
     );
-    if (Math.round(summedWidth / TARGET_WIDTH) > 1) break;
+    if (summedWidth * idealHeight > TARGET_HEIGHT * TARGET_WIDTH) break;
     // Incr. by thousandths of the original (500 steps)
     idealHeight += TARGET_HEIGHT / 3 / 500;
   }

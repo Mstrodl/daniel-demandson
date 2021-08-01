@@ -66,16 +66,24 @@ app.event("app_mention", async (ctx) => {
   console.log(ctx.payload.files);
   const files = [];
 
+  const user = await ctx.client.users.info({
+    user: ctx.payload.user,
+  });
+  console.log(user);
+
   await db.collection("images").insertMany(
     ctx.payload.files.map((file) => ({
       url: file.url_private,
       pending: true,
       date,
+      user: user.name,
     }))
   );
   await ctx.client.chat.postMessage({
     text: `Hello! Your demands should be sent in the next collection at ${monthScheduler} (${
-      (Date.now() - monthScheduler) / 1000 / 60 / 60 / 24
+      Math.round(
+        ((monthScheduler.getTime() - Date.now()) / 1000 / 60 / 60 / 24) * 100
+      ) / 100
     } days)`,
     thread_ts: ctx.payload.thread_ts || ctx.payload.ts,
     channel: ctx.payload.channel,
@@ -121,7 +129,7 @@ async function runPostcard() {
         },
       },
       metadata: {
-        name: image.name,
+        name: "@" + image.user,
       },
     });
   }
@@ -182,6 +190,7 @@ async function runPostcard() {
   resetMonth();
   tickTimer();
 }
+
 if (process.env.RUN_POST) {
   runPostcard();
 } else {
