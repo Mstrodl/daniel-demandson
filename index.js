@@ -76,7 +76,7 @@ app.event("app_mention", async (ctx) => {
       url: file.url_private,
       pending: true,
       date,
-      user: user.name,
+      user: user.profile.display_name,
     }))
   );
   await ctx.client.chat.postMessage({
