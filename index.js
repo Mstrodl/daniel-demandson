@@ -66,7 +66,7 @@ app.event("app_mention", async (ctx) => {
   console.log(ctx.payload.files);
   const files = [];
 
-  const user = await ctx.client.users.info({
+  const {user} = await ctx.client.users.info({
     user: ctx.payload.user,
   });
   console.log(user);
